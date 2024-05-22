@@ -1,6 +1,7 @@
 const predictClassification = require("../services/inferenceService");
 const crypto = require("crypto");
 const storeData = require("../services/storeData");
+const getData = require("../services/getData"); 
 
 async function postPredictHandler(request, h) {
   const { image } = request.payload;
@@ -45,4 +46,34 @@ async function postPredictHandler(request, h) {
   }
 }
 
-module.exports = postPredictHandler;
+async function getPredictionHistoriesHandler(request, h) {
+  try {
+    const histories = await getData();
+
+    const data = histories.map((history) => {
+      return {
+        id: history.id,
+        result: history.result,
+        suggestion: history.suggestion,
+        confidenceScore: history.confidenceScore,
+        createdAt: history.createdAt,
+      };
+    });
+
+    const response = h.response({
+      status: "success",
+      data: data,
+    });
+    response.code(200);
+    return response;
+  } catch (error) {
+    const response = h.response({
+      status: "fail",
+      message: "Terjadi kesalahan dalam mengambil riwayat prediksi",
+    });
+    response.code(400);
+    return response;
+  }
+}
+
+module.exports = {postPredictHandler, getPredictionHistoriesHandler};
